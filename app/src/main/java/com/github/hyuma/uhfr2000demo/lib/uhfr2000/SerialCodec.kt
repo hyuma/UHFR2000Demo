@@ -10,6 +10,8 @@ class SerialCodec {
         const val CMD_OBTAIN_GPIO_STATE = 0x47
     }
 
+
+
     fun tagInventoryEPC(adr:Int):ByteArray{
         val data = byteArrayOf(0b0100.toByte(), 0xFF.toByte())
         var frame = RequestFrame(adr, CMD_INVENTORY, data)
@@ -74,43 +76,5 @@ class SerialCodec {
     }
 
 
-    open class ResponseFrame (frameBytes: ByteArray){
-        var len: Int = frameBytes[0].toInt()
-        var adr: Int = frameBytes[1].toInt()
-        var cmd : Int = frameBytes[2].toInt()
-        var status : Int = frameBytes[3].toInt()
-        var data :ByteArray = ByteArray(0)
-        var lsb_crc16 : Int = frameBytes[len - 1].toInt()
-        var msb_crc16 : Int = frameBytes[len].toInt()
-        init {
-            for (i in 4..(len - 2)) {
-                data = data.plus(frameBytes[i])
-            }
-        }
 
-        override fun toString(): String {
-            var myString = len.toString() + ", " + adr.toString() + ", " +
-                    cmd.toString() + ", " + status.toString() + ", "
-            data.forEach {
-                myString += (it.toString() + ", ")
-            }
-            myString += lsb_crc16.toString()
-            myString += msb_crc16.toString()
-            return myString
-        }
-
-        fun isCRCValid(): Boolean{
-            var calculatedCrc = 0
-            calculatedCrc = if (data == null) {
-                CCITT_CRC16.generate(byteArrayOf(len.toByte(), adr.toByte(), cmd.toByte(), status.toByte()))
-            } else {
-                CCITT_CRC16.generate(byteArrayOf(len.toByte(), adr.toByte(), cmd.toByte(), status.toByte()).plus(data))
-            }
-
-            val calculated_lsb_crc = calculatedCrc and 0xFF
-            val calculated_msb_crc = calculatedCrc ushr 8
-            return (calculated_lsb_crc.toByte() == lsb_crc16.toByte()) and (calculated_msb_crc.toByte() == msb_crc16.toByte())
-        }
-
-    }
 }

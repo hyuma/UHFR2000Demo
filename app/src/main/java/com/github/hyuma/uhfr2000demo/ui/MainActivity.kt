@@ -6,39 +6,24 @@ import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbManager
 import android.os.Bundle
-import android.os.IBinder
 import android.util.Log
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import com.felhr.usbserial.UsbSerialDevice
 import com.github.hyuma.uhfr2000demo.R
-import com.github.hyuma.uhfr2000demo.framework.usb.UHFR2000ConnectionService
+import com.github.hyuma.uhfr2000demo.model.UHFR2000
 import com.github.hyuma.uhfr2000demo.ui.not_connected.NotConnectedFragment
 
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     companion object {
-        val TAG: String = this::class.java.simpleName
+        val TAG: String = MainActivity::class.java.simpleName
         private const val ACTION_USB_PERMISSION = "com.github.hyuma.USB_PERMISSION"
     }
     private lateinit var usbManager: UsbManager
-
-    private var uhfr2000ConnectionServiceBinder: UHFR2000ConnectionService.UHFR2000Binder? = null
-    private var uhfr2000ServiceConnection = object : ServiceConnection{
-        override fun onServiceConnected(name: ComponentName?, binder: IBinder){
-            uhfr2000ConnectionServiceBinder = binder as UHFR2000ConnectionService.UHFR2000Binder
-            setUpUSBSerialConnection()
-        }
-        override fun onServiceDisconnected(name: ComponentName?) {
-            Log.d(TAG, "ServiceDisconnected")
-            uhfr2000ConnectionServiceBinder = null
-        }
-
-    }
 
 
     private val usbReceiver = object : BroadcastReceiver() {
@@ -49,7 +34,7 @@ class MainActivity : AppCompatActivity() {
                     if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                         val apply = device?.apply {
                             //set up device communication
-                            requireNotNull(uhfr2000ConnectionServiceBinder).setUHFR2000Device(connectDevice(device))
+                            UHFR2000.setUsbSerialDevice(connectDevice(device))
                         }
                         apply
                     } else {
@@ -62,23 +47,25 @@ class MainActivity : AppCompatActivity() {
 
     private fun connectDevice(device: UsbDevice): UsbSerialDevice {
         val usbConnection: UsbDeviceConnection = usbManager.openDevice(device)
+        Log.d(TAG,"USB Device Connected")
         Toast.makeText(this, "USB Device connected", Toast.LENGTH_SHORT).show()
         return UsbSerialDevice.createUsbSerialDevice(device, usbConnection)
     }
 
-    private fun setUpUSBSerialConnection(){
+    fun setUpUSBSerialConnection(){
         usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
         val usbDevices: HashMap<String, UsbDevice> = usbManager.deviceList
         if (usbDevices.isNotEmpty()) {
             for ((_, device) in usbDevices) {
                 // break if already connected
                 Log.d(TAG, device.vendorId.toString())
-                if (uhfr2000ConnectionServiceBinder != null && uhfr2000ConnectionServiceBinder!!.isConnected()) {
+                if (UHFR2000.isConnected()) {
+                    Log.d(TAG, "End setting up USB Serial Connection. Already connected.")
                     return
                 }
 
                 val vendorId = device.vendorId
-                if (vendorId == UHFR2000ConnectionService.VENDOR_ID)
+                if (vendorId == UHFR2000.VENDOR_ID)
                 {
                     val pi = PendingIntent.getBroadcast(
                         this, 0,
@@ -87,12 +74,15 @@ class MainActivity : AppCompatActivity() {
                     val filter = IntentFilter(ACTION_USB_PERMISSION)
                     registerReceiver(usbReceiver, filter)
                     usbManager.requestPermission(device, pi)
-
+                    Log.d(TAG, "Found UHFR2000")
                     Toast.makeText(this, "Found UHFR2000: " + device.vendorId.toString() + ", "+ device.deviceId.toString(), Toast.LENGTH_SHORT).show()
+                    return
                 }
             }
+            Log.d(TAG, "No UHFR2000 Device Found")
             Toast.makeText(this, "No UHFR2000 Device Found", Toast.LENGTH_SHORT).show()
         } else {
+            Log.d(TAG, "No USB Device connected")
             Toast.makeText(this, "No USB device connected", Toast.LENGTH_SHORT).show()
         }
 
@@ -102,15 +92,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-
-        val intent = Intent(applicationContext, UHFR2000ConnectionService::class.java)
-        bindService(intent, uhfr2000ServiceConnection, Context.BIND_AUTO_CREATE)
-
+        setUpUSBSerialConnection()
         if (savedInstanceState == null) {
+            val fragment = NotConnectedFragment()
             supportFragmentManager
                 .beginTransaction()
                 .add(R.id.fragment_container,
-                    NotConnectedFragment(),
+                    fragment,
                     NotConnectedFragment.TAG
                 )
                 .commit()

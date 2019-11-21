@@ -1,20 +1,24 @@
 package com.github.hyuma.uhfr2000demo.lib.uhfr2000
 
-import com.github.hyuma.uhfr2000demo.lib.uhfr2000.SerialCodec.*
+import android.util.Log
 
 class FrameDecoder {
+    companion object {
+        val TAG: String = FrameDecoder::class.java.simpleName
+    }
     private var frameByteBuffer = ByteArray(0)
 
     fun pushBytes(byteArray: ByteArray){
         frameByteBuffer = frameByteBuffer.plus(byteArray)
     }
+
     fun getFrames(): ArrayList<ResponseFrame>{
         val frame_arraylist = ArrayList<ResponseFrame>()
 
         while(frameByteBuffer.isNotEmpty()){
             try{
-                var res_frame = extractSingleFrameFIFO()
-                frame_arraylist.add(res_frame!!)
+                var resFrame = extractSingleFrameFIFO()
+                frame_arraylist.add(resFrame!!)
             } catch (e: IncompleteFrameException) {
                 // frame buffer is less than frame length (wait for next attempt)
                 break
@@ -28,9 +32,11 @@ class FrameDecoder {
     }
 
     private fun extractSingleFrameFIFO(): ResponseFrame{
+        lateinit var resFrame: ResponseFrame
+
         // Decode Frame
         val len = frameByteBuffer[0].toInt()
-        val cmd = frameByteBuffer[3].toInt()
+        val cmd = frameByteBuffer[2].toInt()
 
         // Return null if frame buffer is less than frame length (wait for next attempt)
         if (frameByteBuffer.size < (len + 1))
@@ -38,8 +44,16 @@ class FrameDecoder {
 
         // Raise Exception if CRC is wrong
         var singleFrameBytes = frameByteBuffer.sliceArray(0..len)
-        val res_frame = ResponseFrame(singleFrameBytes)
-        if (!res_frame.isCRCValid()){
+
+        if(cmd == SerialCodec.CMD_INVENTORY) {
+            resFrame = InventoryResponseFrame(singleFrameBytes)
+        } else {
+            resFrame = ResponseFrame(singleFrameBytes)
+        }
+
+
+
+        if (!resFrame.isCRCValid()){
             singleFrameBytes.forEach {
                 print(it.toInt())
                 print(",")
@@ -52,7 +66,7 @@ class FrameDecoder {
         // Delete bytes of decoded frames
         frameByteBuffer = frameByteBuffer.sliceArray(len+1..frameByteBuffer.lastIndex)
 
-        return res_frame
+        return resFrame
     }
 
     class CorruptedFrameException(msg: String? = null): RuntimeException(msg)
