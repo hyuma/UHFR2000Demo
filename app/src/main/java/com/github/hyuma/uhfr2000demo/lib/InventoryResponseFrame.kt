@@ -1,12 +1,14 @@
-package com.github.hyuma.uhfr2000demo.lib.uhfr2000
+package com.github.hyuma.uhfr2000demo.lib
 
 import android.util.Log
+import java.util.*
 
 class InventoryResponseFrame(frameBytes: ByteArray): ResponseFrame(frameBytes) {
     companion object{
         val TAG: String = InventoryResponseFrame::class.java.simpleName
     }
 
+    @ExperimentalUnsignedTypes
     fun getRFIDTags():List<RFIDTag>{
         var tagList = mutableListOf<RFIDTag>()
         val tagCount = super.data[1].toUByte().toInt()
@@ -23,7 +25,7 @@ class InventoryResponseFrame(frameBytes: ByteArray): ResponseFrame(frameBytes) {
             epcByteArray.forEach {
                 epcString = epcString + it.toUByte().toInt().toString(16)
             }
-            tagList.add(RFIDTag(epcString, rssi))
+            tagList.add(RFIDTag(epcString.toUpperCase(Locale.ROOT), rssi))
 
             tagListByteArray = tagListByteArray
                 .sliceArray(dataLength+1..tagListByteArray.lastIndex)

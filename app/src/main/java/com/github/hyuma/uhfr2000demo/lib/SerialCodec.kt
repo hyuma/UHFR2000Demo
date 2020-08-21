@@ -1,4 +1,4 @@
-package com.github.hyuma.uhfr2000demo.lib.uhfr2000
+package com.github.hyuma.uhfr2000demo.lib
 
 class SerialCodec {
     companion object {
@@ -6,27 +6,53 @@ class SerialCodec {
         const val DATA_BITS = 8
 
         const val CMD_INVENTORY = 0x1
+        const val CMD_INVENTORY_WIH_BUFFER = 0x18
+
         const val CMD_GET_READER_INFO = 0x21
         const val CMD_OBTAIN_GPIO_STATE = 0x47
+        const val CMD_READ_BUFFER = 0x72
+        const val CMD_CLEAR_BUFFER = 0x73
     }
 
 
 
-    fun tagInventoryEPC(adr:Int):ByteArray{
+    fun getInventoryEPCFrame(adr:Int):ByteArray{
         val data = byteArrayOf(0b0100.toByte(), 0xFF.toByte())
         var frame = RequestFrame(adr, CMD_INVENTORY, data)
         return frame.getByteArray()
     }
 
-    fun tagInventoryTID(adr:Int):ByteArray{
+    fun getInventoryTIDFrame(adr:Int):ByteArray{
         val data = byteArrayOf(0b0100.toByte(), 0xFF.toByte())
         var frame = RequestFrame(adr, CMD_INVENTORY, data)
         return frame.getByteArray()
     }
 
-    fun tagInventoryFastID(adr:Int):ByteArray{
+    fun getInventoryFastIDFrame(adr:Int):ByteArray{
         val data = byteArrayOf(0b00100100.toByte(), 0xFF.toByte())
         var frame = RequestFrame(adr, CMD_INVENTORY, data)
+        return frame.getByteArray()
+    }
+
+    fun getInventoryTIDWithBufferFrame(adr:Int, qValue:Byte = 0b0110, session:Int = 1):ByteArray{
+        val data = byteArrayOf(qValue, session.toByte(), 0b0000, 0b0110)
+        var frame = RequestFrame(adr, CMD_INVENTORY_WIH_BUFFER, data)
+        return frame.getByteArray()
+    }
+
+    fun getInventoryEPCWithBufferFrame(adr:Int, qValue:Byte = 0b0110, session:Int = 0b11111111):ByteArray{
+        val data = byteArrayOf(qValue, session.toByte(), 0b0000, 0b0110)
+        var frame = RequestFrame(adr, CMD_INVENTORY_WIH_BUFFER, data)
+        return frame.getByteArray()
+    }
+
+    fun getReadBufferFrame(adr:Int):ByteArray{
+        var frame = RequestFrame(adr, CMD_READ_BUFFER, null)
+        return frame.getByteArray()
+    }
+
+    fun getClearBufferFrame(adr:Int):ByteArray{
+        var frame = RequestFrame(adr, CMD_CLEAR_BUFFER, null)
         return frame.getByteArray()
     }
 

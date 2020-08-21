@@ -13,7 +13,7 @@ import android.view.MenuItem
 import android.widget.Toast
 import com.felhr.usbserial.UsbSerialDevice
 import com.github.hyuma.uhfr2000demo.R
-import com.github.hyuma.uhfr2000demo.model.UHFR2000
+import com.github.hyuma.uhfr2000demo.UHFR2000
 import com.github.hyuma.uhfr2000demo.ui.not_connected.NotConnectedFragment
 
 import kotlinx.android.synthetic.main.activity_main.*

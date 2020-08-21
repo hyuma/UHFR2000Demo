@@ -1,4 +1,4 @@
-package com.github.hyuma.uhfr2000demo.lib.uhfr2000
+package com.github.hyuma.uhfr2000demo.lib
 
 open class ResponseFrame (frameBytes: ByteArray){
     var len: Int = frameBytes[0].toUByte().toInt()

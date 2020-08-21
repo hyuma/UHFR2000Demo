@@ -7,7 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.github.hyuma.uhfr2000demo.model.UHFR2000
+import com.github.hyuma.uhfr2000demo.UHFR2000
 
 class NotConnectedViewModel(application: Application): AndroidViewModel(application) {
     companion object {

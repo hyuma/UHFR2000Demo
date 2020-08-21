@@ -1,4 +1,4 @@
-package com.github.hyuma.uhfr2000demo.lib.uhfr2000
+package com.github.hyuma.uhfr2000demo.lib
 
 
 class CCITT_CRC16 {

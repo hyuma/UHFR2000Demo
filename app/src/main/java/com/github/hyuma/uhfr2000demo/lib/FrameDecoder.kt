@@ -1,4 +1,4 @@
-package com.github.hyuma.uhfr2000demo.lib.uhfr2000
+package com.github.hyuma.uhfr2000demo.lib
 
 import android.util.Log
 
@@ -10,6 +10,7 @@ class FrameDecoder {
 
     fun pushBytes(byteArray: ByteArray){
         frameByteBuffer = frameByteBuffer.plus(byteArray)
+        Log.d(TAG, "Frame Byte Buffer Count: " + frameByteBuffer.size.toString())
     }
 
     fun getFrames(): ArrayList<ResponseFrame>{
@@ -35,24 +36,22 @@ class FrameDecoder {
         lateinit var resFrame: ResponseFrame
 
         // Decode Frame
-        val len = frameByteBuffer[0].toInt()
-        val cmd = frameByteBuffer[2].toInt()
+        val len = frameByteBuffer[0].toUByte().toInt()
+        val cmd = frameByteBuffer[2].toUByte().toInt()
 
         // Return null if frame buffer is less than frame length (wait for next attempt)
         if (frameByteBuffer.size < (len + 1))
             throw (IncompleteFrameException("Frame buffer size is less than frame length. Wait for next attempt."))
 
-        // Raise Exception if CRC is wrong
         var singleFrameBytes = frameByteBuffer.sliceArray(0..len)
 
-        if(cmd == SerialCodec.CMD_INVENTORY) {
-            resFrame = InventoryResponseFrame(singleFrameBytes)
-        } else {
-            resFrame = ResponseFrame(singleFrameBytes)
+        when {
+            cmd == SerialCodec.CMD_INVENTORY -> resFrame = InventoryResponseFrame(singleFrameBytes)
+            cmd == SerialCodec.CMD_READ_BUFFER -> resFrame = ReadBufferResponseFrame(singleFrameBytes)
+            else -> resFrame = ResponseFrame(singleFrameBytes)
         }
 
-
-
+        // Raise Exception if CRC is wrong
         if (!resFrame.isCRCValid()){
             singleFrameBytes.forEach {
                 print(it.toInt())
