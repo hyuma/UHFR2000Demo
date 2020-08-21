@@ -40,8 +40,8 @@ class SerialCodec {
         return frame.getByteArray()
     }
 
-    fun getInventoryEPCWithBufferFrame(adr:Int, qValue:Byte = 0b0110, session:Int = 0b11111111):ByteArray{
-        val data = byteArrayOf(qValue, session.toByte(), 0b0000, 0b0110)
+    fun getInventoryEPCWithBufferFrame(adr:Int, qValue:Byte = 0b00000110, session:Int = 0b11111111):ByteArray{
+        val data = byteArrayOf(qValue, session.toByte(), 0x01, 0x0, 0x0)
         var frame = RequestFrame(adr, CMD_INVENTORY_WIH_BUFFER, data)
         return frame.getByteArray()
     }

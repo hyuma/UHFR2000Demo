@@ -152,6 +152,7 @@ object UHFR2000 {
     fun readBuffer(){
         // Reset mutableLiveData
         isReadBufferCompleted.set(false)
+        println(isReadBufferCompleted.get())
         bufferRFIDTagMutableList = mutableListOf()
         sendFrame(serialCodec.getReadBufferFrame(0))
     }

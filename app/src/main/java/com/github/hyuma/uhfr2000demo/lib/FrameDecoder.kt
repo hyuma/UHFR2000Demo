@@ -38,6 +38,8 @@ class FrameDecoder {
         // Decode Frame
         val len = frameByteBuffer[0].toUByte().toInt()
         val cmd = frameByteBuffer[2].toUByte().toInt()
+        val status = frameByteBuffer[3].toUByte().toInt()
+        println(status)
 
         // Return null if frame buffer is less than frame length (wait for next attempt)
         if (frameByteBuffer.size < (len + 1))
